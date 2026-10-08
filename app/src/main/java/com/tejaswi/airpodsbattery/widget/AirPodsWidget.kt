@@ -9,7 +9,6 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.unit.ColorProvider
@@ -24,8 +23,8 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.dp
-import androidx.glance.unit.sp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tejaswi.airpodsbattery.AppPrefs
 import com.tejaswi.airpodsbattery.MainActivity
 import com.tejaswi.airpodsbattery.model.AirPodsBattery
@@ -56,10 +55,10 @@ class AirPodsWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun WidgetContent(battery: AirPodsBattery?) {
-    val bg = ColorProvider(day = Color(0xFF111116), night = Color(0xFF111116))
-    val primary = ColorProvider(day = Color(0xFFF5F5F7), night = Color(0xFFF5F5F7))
-    val secondary = ColorProvider(day = Color(0xFFA7A7B2), night = Color(0xFFA7A7B2))
-    val accent = ColorProvider(day = Color(0xFFA78BFA), night = Color(0xFFA78BFA))
+    val bg = ColorProvider(Color(0xFF111116))
+    val primary = ColorProvider(Color(0xFFF5F5F7))
+    val secondary = ColorProvider(Color(0xFFA7A7B2))
+    val accent = ColorProvider(Color(0xFFA78BFA))
 
     Column(
         modifier = GlanceModifier
