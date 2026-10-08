@@ -32,7 +32,7 @@ android {
     }
 
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        jvmTarget = "17"
     }
 
     buildFeatures {
