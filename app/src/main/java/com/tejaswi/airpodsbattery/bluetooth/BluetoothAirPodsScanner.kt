@@ -14,7 +14,6 @@ import com.tejaswi.airpodsbattery.model.AirPodsBattery
 import com.tejaswi.airpodsbattery.model.BluetoothPacket
 
 class BluetoothAirPodsScanner(context: Context) {
-
     private val appContext = context.applicationContext
     private val manager =
         appContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -56,9 +55,8 @@ class BluetoothAirPodsScanner(context: Context) {
         onError: (String) -> Unit
     ) {
         stopScan()
-
-        val scanner = adapter?.bluetoothLeScanner
-        if (scanner == null) {
+        val bleScanner = adapter?.bluetoothLeScanner
+        if (bleScanner == null) {
             onError("Bluetooth LE scanner unavailable.")
             return
         }
@@ -68,32 +66,25 @@ class BluetoothAirPodsScanner(context: Context) {
             .build()
 
         callback = object : ScanCallback() {
-
             override fun onScanResult(callbackType: Int, result: ScanResult) {
                 val record = result.scanRecord ?: return
+                val apple = record.getManufacturerSpecificData(AirPodsParser.APPLE_COMPANY_ID)
+                    ?: return
 
-                val apple = record.getManufacturerSpecificData(
-                    AirPodsParser.APPLE_COMPANY_ID
+                val battery = AirPodsParser.parse(apple, result.rssi)
+
+                onPacket(
+                    BluetoothPacket(
+                        name = result.device.name ?: record.deviceName ?: "Unknown",
+                        address = result.device.address,
+                        rssi = result.rssi,
+                        appleData = AirPodsParser.hex(apple),
+                        manufacturerLength = apple.size,
+                        isAirPods3 = AirPodsParser.isAirPods3(apple)
+                    )
                 )
 
-                if (apple != null) {
-                    val battery = AirPodsParser.parse(apple)
-
-                    onPacket(
-                        BluetoothPacket(
-                            name = result.device.name ?: record.deviceName ?: "Unknown",
-                            address = result.device.address,
-                            rssi = result.rssi,
-                            appleData = AirPodsParser.hex(apple),
-                            manufacturerLength = apple.size,
-                            isAirPods3 = AirPodsParser.isAirPods3(apple)
-                        )
-                    )
-
-                    if (battery != null) {
-                        onBattery(battery)
-                    }
-                }
+                if (battery != null) onBattery(battery)
             }
 
             override fun onScanFailed(errorCode: Int) {
@@ -102,9 +93,7 @@ class BluetoothAirPodsScanner(context: Context) {
         }
 
         try {
-            // IMPORTANT: no manufacturer filter in V2.
-            // We need to see the actual Apple advertisement Android receives.
-            scanner.startScan(null, settings, callback)
+            bleScanner.startScan(null, settings, callback)
         } catch (e: SecurityException) {
             onError("Bluetooth permission was not granted.")
         } catch (e: Exception) {

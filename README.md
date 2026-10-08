@@ -1,53 +1,62 @@
-# AirPods Battery V3
+# AirPods Battery — V4
 
-Android AirPods 3 battery detector using Bluetooth Low Energy advertisements.
+A dark-mode Android companion for AirPods 3. V4 turns the proven BLE battery MVP into a real app surface with a home-screen widget, persistent settings, background monitoring, experimental in-ear detection, and optional automatic media pause.
 
-## V3 fixes
+## V4 features
 
-V3 fixes the AirPods 3 packet parsing bug found in V2. The observed 27-byte Apple packet was:
+- AirPods 3 BLE battery detection
+- Left / right / case battery
+- Charging state
+- Dark-first UI
+- AirPods-style launcher icon
+- Experimental left/right in-ear state
+- Home-screen widget using Jetpack Glance
+- Background BLE monitoring through a foreground service
+- **Auto-pause toggle in Settings**
+- Auto-pause only when the app has confirmed an ear was previously in-ear and then detects removal
+- Notification Access integration for media-session pause commands
+- Raw BLE diagnostics retained for troubleshooting
 
-```text
-07 19 01 13 20 2B 99 8F 02 00 04 76 25 DF 99 75 55 37 C9 18 76 21 FD 65 81 07 2D
-```
+## Auto-pause
 
-For this format:
+Go to:
 
-- `07` = AirPods advertisement type
-- `13 20` = AirPods 3 model identifier `0x1320` (big-endian)
-- `99` = both earbud battery nibbles are 9 → 95%
-- `8F` = case battery nibble `F` → unavailable in this advertisement
-- status byte `2B` contains the flip flag used to map the two earbud nibbles to left/right
-- charging flags use bit 0 = right, bit 1 = left, bit 2 = case
+**Settings → Playback → Auto-pause when removed**
 
-### Important V2 bug
+When enabled, the app needs Android Notification Access so it can control the active media session. It then monitors AirPods state in the background and requests pause when an AirPod is removed after both earbuds were previously detected in-ear.
 
-V2 interpreted `13 20` as little-endian and calculated `0x2013`, so it rejected a valid AirPods 3 packet. V3 reads the model as `(b[3] shl 8) or b[4]`.
+The feature is intentionally conservative and experimental because AirPods ear-detection information is reverse-engineered rather than provided by a public Apple Android API.
 
-V3 also corrects the left/right charging flag mapping.
+## Background monitoring
 
-## Test
+**Settings → Background monitoring** keeps the BLE monitor running while the app is not on screen. Android shows an ongoing low-priority monitoring notification while the service is active.
 
-1. Pair AirPods 3 with Android normally.
-2. Open the AirPods case / take the earbuds out.
-3. Open this app.
-4. Grant Bluetooth permission.
-5. Tap **Scan for AirPods 3**.
-6. Wait a few seconds.
+## Widget
 
-When the AirPods advertisement is received, the decoded battery should appear at the top of the screen.
+Add **AirPods Battery** from your Android launcher's widget picker. The widget shows the last decoded left, right, and case battery state and opens the app when tapped.
 
-The diagnostic packet list remains available so parser behavior can be verified if a phone/ROM sends a different advertisement layout.
+Widget updates are pushed when the app/service receives a fresh AirPods battery packet. Android may also refresh widgets periodically according to its normal widget scheduling rules.
 
-## Build
-
-```bash
-gradle assembleDebug
-```
-
-APK:
+## V4 architecture
 
 ```text
-app/build/outputs/apk/debug/app-debug.apk
+AirPods BLE advertisements
+          ↓
+     AirPodsParser
+          ↓
+      AirPodsState
+          ↓
+   ┌──────┼────────┐
+   ↓      ↓        ↓
+  App   Widget   Background
+                    ↓
+              Ear detection
+                    ↓
+              Auto-pause
+                    ↓
+             Media session
 ```
 
-GitHub Actions builds the debug APK automatically on pushes to `main`.
+## Important limitation
+
+Battery decoding is the stable part of the project. Ear detection and automatic media control are experimental and can vary by AirPods firmware, Android version, OEM Bluetooth stack, background restrictions, and the media app's media-session implementation.
