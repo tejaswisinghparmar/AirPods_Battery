@@ -154,7 +154,7 @@ private fun BatteryScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "V2 • BLE diagnostics",
+                "V3 • AirPods 3 BLE battery",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -166,7 +166,7 @@ private fun BatteryScreen(
                     Spacer(Modifier.height(12.dp))
 
                     if (battery == null) {
-                        Text("No AirPods 3 battery packet decoded yet.")
+                        Text("Open the case or remove the earbuds, then scan.")
                     } else {
                         BatteryRow("Left", battery.left, battery.leftCharging)
                         BatteryRow("Right", battery.right, battery.rightCharging)
@@ -210,7 +210,7 @@ private fun BatteryScreen(
 
         item {
             Text(
-                "V2 intentionally scans without an Apple manufacturer filter. This lets us inspect the exact BLE advertisement Android receives from your AirPods 3.",
+                "V3 keeps BLE diagnostics visible so packet parsing can be verified on different Android phones and ROMs.",
                 style = MaterialTheme.typography.bodySmall
             )
         }

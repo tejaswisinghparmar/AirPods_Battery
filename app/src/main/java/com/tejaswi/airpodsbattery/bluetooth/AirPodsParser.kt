@@ -21,7 +21,7 @@ object AirPodsParser {
 
         if (b[0] != 0x07) return null
 
-        val model = b[3] or (b[4] shl 8)
+        val model = (b[3] shl 8) or b[4]
         if (model != AIRPODS_3_MODEL) return null
 
         val status = b[5]
@@ -43,8 +43,8 @@ object AirPodsParser {
             left = left,
             right = right,
             case = caseBattery,
-            leftCharging = (flags and 0x01) != 0,
-            rightCharging = (flags and 0x02) != 0,
+            rightCharging = (flags and 0x01) != 0,
+            leftCharging = (flags and 0x02) != 0,
             caseCharging = (flags and 0x04) != 0
         )
     }
@@ -61,7 +61,7 @@ object AirPodsParser {
         if (data.size < 5) return false
         val b = data.map { it.toInt() and 0xFF }
         if (b[0] != 0x07) return false
-        val model = b[3] or (b[4] shl 8)
+        val model = (b[3] shl 8) or b[4]
         return model == AIRPODS_3_MODEL
     }
 
