@@ -25,6 +25,9 @@ import androidx.glance.unit.ColorProvider
 import com.tejaswi.airpodsbattery.AppPrefs
 import com.tejaswi.airpodsbattery.MainActivity
 import com.tejaswi.airpodsbattery.model.AirPodsBattery
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AirPodsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -33,7 +36,7 @@ class AirPodsWidget : GlanceAppWidget() {
 
     companion object {
         fun refresh(context: Context) {
-            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 AirPodsWidget().updateAll(context.applicationContext)
             }
         }
