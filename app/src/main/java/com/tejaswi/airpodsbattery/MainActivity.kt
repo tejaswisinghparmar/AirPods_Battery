@@ -606,6 +606,7 @@ private fun notificationAccessEnabled(activity: MainActivity): Boolean {
 }
 
 
+@Composable
 private fun AirPodsTheme(content: @Composable () -> Unit) {
     val colors = androidx.compose.material3.darkColorScheme(
         primary = AppAccent,

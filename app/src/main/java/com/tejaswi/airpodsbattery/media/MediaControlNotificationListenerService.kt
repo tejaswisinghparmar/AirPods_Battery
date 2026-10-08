@@ -1,8 +1,10 @@
 package com.tejaswi.airpodsbattery.media
 
-import android.service.notification.NotificationListenerService
+import android.content.ComponentName
 import android.media.session.MediaController
+import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.service.notification.NotificationListenerService
 
 class MediaControlNotificationListenerService : NotificationListenerService() {
 
@@ -16,7 +18,10 @@ class MediaControlNotificationListenerService : NotificationListenerService() {
 
     fun pauseActiveMedia(): Boolean {
         val controllers = try {
-            activeSessions
+            val manager = getSystemService(MediaSessionManager::class.java)
+            manager.getActiveSessions(
+                ComponentName(this, MediaControlNotificationListenerService::class.java)
+            )
         } catch (_: SecurityException) {
             return false
         } catch (_: Exception) {
@@ -24,14 +29,13 @@ class MediaControlNotificationListenerService : NotificationListenerService() {
         }
 
         var paused = false
-        for (controller in controllers) {
-            val state = controller.playbackState?.state
-            if (state == PlaybackState.STATE_PLAYING) {
+        for (controller: MediaController in controllers) {
+            if (controller.playbackState?.state == PlaybackState.STATE_PLAYING) {
                 try {
                     controller.transportControls.pause()
                     paused = true
                 } catch (_: Exception) {
-                    // Some media sessions can disappear between discovery and pause.
+                    // The media session can disappear between discovery and pause.
                 }
             }
         }
