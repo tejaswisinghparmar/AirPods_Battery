@@ -9,5 +9,6 @@ data class AirPodsBattery(
     val caseCharging: Boolean = false,
     val leftInEar: Boolean? = null,
     val rightInEar: Boolean? = null,
-    val rssi: Int? = null
+    val rssi: Int? = null,
+    val deviceName: String = "AirPods 3"
 )

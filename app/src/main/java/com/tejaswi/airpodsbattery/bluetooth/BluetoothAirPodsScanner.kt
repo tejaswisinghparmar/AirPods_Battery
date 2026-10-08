@@ -71,11 +71,12 @@ class BluetoothAirPodsScanner(context: Context) {
                 val apple = record.getManufacturerSpecificData(AirPodsParser.APPLE_COMPANY_ID)
                     ?: return
 
-                val battery = AirPodsParser.parse(apple, result.rssi)
+                val deviceName = result.device.name ?: record.deviceName ?: "AirPods 3"
+                val battery = AirPodsParser.parse(apple, result.rssi)?.copy(deviceName = deviceName)
 
                 onPacket(
                     BluetoothPacket(
-                        name = result.device.name ?: record.deviceName ?: "Unknown",
+                        name = deviceName,
                         address = result.device.address,
                         rssi = result.rssi,
                         appleData = AirPodsParser.hex(apple),

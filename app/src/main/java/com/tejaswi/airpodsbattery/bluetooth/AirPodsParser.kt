@@ -47,16 +47,13 @@ object AirPodsParser {
         val primaryIsLeft = (status and 0x20) != 0
         val thisPodInCase = (status and 0x40) != 0
         val xorFactor = primaryIsLeft.xor(thisPodInCase)
-        val leftInEar = if (xorFactor) {
-            (status and 0x08) != 0
-        } else {
-            (status and 0x02) != 0
-        }
-        val rightInEar = if (xorFactor) {
-            (status and 0x02) != 0
-        } else {
-            (status and 0x08) != 0
-        }
+        // The raw orientation is opposite to the physical side for the
+        // AirPods 3 advertisements observed in the field. Swap the two
+        // decoded ear bits after applying the orientation factor.
+        val decodedA = if (xorFactor) (status and 0x08) != 0 else (status and 0x02) != 0
+        val decodedB = if (xorFactor) (status and 0x02) != 0 else (status and 0x08) != 0
+        val leftInEar = decodedB
+        val rightInEar = decodedA
 
         return AirPodsBattery(
             left = left,

@@ -1,8 +1,9 @@
 package com.tejaswi.airpodsbattery.widget
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.action.actionStartActivity
@@ -12,38 +13,27 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
-import androidx.glance.unit.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.glance.unit.ColorProvider
 import com.tejaswi.airpodsbattery.AppPrefs
 import com.tejaswi.airpodsbattery.MainActivity
 import com.tejaswi.airpodsbattery.model.AirPodsBattery
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class AirPodsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val battery = AppPrefs.lastBattery(context)
-        provideContent {
-            WidgetContent(battery)
-        }
+        provideContent { WidgetContent(AppPrefs.lastBattery(context)) }
     }
 
     companion object {
         fun refresh(context: Context) {
-            CoroutineScope(Dispatchers.Default).launch {
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
                 AirPodsWidget().updateAll(context.applicationContext)
             }
         }
@@ -54,64 +44,21 @@ class AirPodsWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = AirPodsWidget()
 }
 
-@Composable
-private fun WidgetContent(battery: AirPodsBattery?) {
-    val bg = ColorProvider(Color(0xFF111116))
-    val primary = ColorProvider(Color(0xFFF5F5F7))
-    val secondary = ColorProvider(Color(0xFFA7A7B2))
-    val accent = ColorProvider(Color(0xFFA78BFA))
+private val WidgetBg = ColorProvider(Color(0xFF111116))
+private val WidgetText = ColorProvider(Color(0xFFF5F5F7))
+private val WidgetMuted = ColorProvider(Color(0xFFA7A7B2))
 
+@androidx.compose.runtime.Composable
+private fun WidgetContent(battery: AirPodsBattery?) {
     Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(Color(0xFF111116))
-            .clickable(actionStartActivity<MainActivity>())
-            .padding(16.dp),
+        modifier = GlanceModifier.fillMaxSize().background(WidgetBg).clickable(actionStartActivity<MainActivity>()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically
     ) {
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
-            Text("AirPods 3", style = TextStyle(color = primary, fontSize = 17.sp))
-            Spacer(GlanceModifier.width(8.dp))
-            Text("●", style = TextStyle(color = accent, fontSize = 12.sp))
-        }
-        Spacer(GlanceModifier.height(10.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            WidgetBattery("L", battery?.left, battery?.leftCharging, primary, secondary)
-            Spacer(GlanceModifier.width(12.dp))
-            WidgetBattery("R", battery?.right, battery?.rightCharging, primary, secondary)
-        }
-        Spacer(GlanceModifier.height(8.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
-            Text("Case", style = TextStyle(color = secondary, fontSize = 13.sp))
-            Spacer(GlanceModifier.width(8.dp))
-            Text(
-                battery?.case?.let { "$it%" } ?: "—",
-                style = TextStyle(color = primary, fontSize = 16.sp)
-            )
-            if (battery?.caseCharging == true) {
-                Spacer(GlanceModifier.width(5.dp))
-                Text("⚡", style = TextStyle(color = accent, fontSize = 12.sp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun WidgetBattery(
-    label: String,
-    value: Int?,
-    charging: Boolean?,
-    primary: ColorProvider,
-    secondary: ColorProvider
-) {
-    Column {
-        Text(label, style = TextStyle(color = secondary, fontSize = 12.sp))
-        Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-            Text(value?.let { "$it%" } ?: "—", style = TextStyle(color = primary, fontSize = 20.sp))
-            if (charging == true) {
-                Spacer(GlanceModifier.width(4.dp))
-                Text("⚡", style = TextStyle(color = primary, fontSize = 11.sp))
-            }
+        Text(battery?.deviceName?.takeIf { it.isNotBlank() } ?: "AirPods 3", style = TextStyle(color = WidgetText, fontSize = 14.sp))
+        Row(modifier = GlanceModifier.fillMaxWidth().padding(top = 5.dp), horizontalAlignment = Alignment.Horizontal.Start) {
+            Text("L ${battery?.left?.let { "$it%" } ?: "--"}", style = TextStyle(color = WidgetText, fontSize = 13.sp))
+            Text("   R ${battery?.right?.let { "$it%" } ?: "--"}", style = TextStyle(color = WidgetText, fontSize = 13.sp))
+            Text("   C ${battery?.case?.let { "$it%" } ?: "--"}", style = TextStyle(color = WidgetMuted, fontSize = 13.sp))
         }
     }
 }

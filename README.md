@@ -1,8 +1,8 @@
-# AirPods Battery — V4
+# AirPods Battery — V5
 
-A dark-mode Android companion for AirPods 3. V4 turns the proven BLE battery MVP into a real app surface with a home-screen widget, persistent settings, background monitoring, experimental in-ear detection, and optional automatic media pause.
+A dark-mode Android companion for AirPods 3. V5 turns the proven BLE battery MVP into a real app surface with a home-screen widget, persistent settings, background monitoring, experimental in-ear detection, and optional automatic media pause.
 
-## V4 features
+## V5 features
 
 - AirPods 3 BLE battery detection
 - Left / right / case battery
@@ -37,7 +37,7 @@ Add **AirPods Battery** from your Android launcher's widget picker. The widget s
 
 Widget updates are pushed when the app/service receives a fresh AirPods battery packet. Android may also refresh widgets periodically according to its normal widget scheduling rules.
 
-## V4 architecture
+## V5 architecture
 
 ```text
 AirPods BLE advertisements

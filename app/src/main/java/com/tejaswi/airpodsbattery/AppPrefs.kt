@@ -5,6 +5,7 @@ import android.content.Context
 object AppPrefs {
     private const val NAME = "airpods_preferences"
     private const val AUTO_PAUSE = "auto_pause"
+    private const val AUTO_PLAY = "auto_play"
     private const val BACKGROUND_MONITORING = "background_monitoring"
     private const val LAST_LEFT = "last_left"
     private const val LAST_RIGHT = "last_right"
@@ -16,11 +17,18 @@ object AppPrefs {
     private const val LAST_RIGHT_EAR = "last_right_ear"
     private const val LAST_RSSI = "last_rssi"
     private const val LAST_UPDATED = "last_updated"
+    private const val LAST_DEVICE_NAME = "last_device_name"
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(NAME, Context.MODE_PRIVATE)
 
     fun autoPause(context: Context): Boolean = prefs(context).getBoolean(AUTO_PAUSE, false)
+
+    fun autoPlay(context: Context): Boolean = prefs(context).getBoolean(AUTO_PLAY, false)
+
+    fun setAutoPlay(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(AUTO_PLAY, enabled).apply()
+    }
 
     fun setAutoPause(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(AUTO_PAUSE, enabled).apply()
@@ -45,6 +53,7 @@ object AppPrefs {
             .putBooleanOrRemove(LAST_RIGHT_EAR, battery.rightInEar)
             .putIntOrRemove(LAST_RSSI, battery.rssi)
             .putLong(LAST_UPDATED, System.currentTimeMillis())
+            .putString(LAST_DEVICE_NAME, battery.deviceName)
             .apply()
     }
 
@@ -61,7 +70,8 @@ object AppPrefs {
             caseCharging = p.getBoolean(LAST_CASE_CHARGING, false),
             leftInEar = p.booleanOrNull(LAST_LEFT_EAR),
             rightInEar = p.booleanOrNull(LAST_RIGHT_EAR),
-            rssi = p.intOrNull(LAST_RSSI)
+            rssi = p.intOrNull(LAST_RSSI),
+            deviceName = p.getString(LAST_DEVICE_NAME, "AirPods 3") ?: "AirPods 3"
         )
     }
 

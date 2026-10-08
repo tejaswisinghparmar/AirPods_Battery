@@ -153,8 +153,8 @@ class MainActivity : ComponentActivity() {
             },
             onBattery = { battery ->
                 runOnUiThread {
-                    AirPodsStateBus.publish(battery)
-                    AppPrefs.saveBattery(this, battery)
+                    val stable = AirPodsStateBus.publish(battery)
+                    AppPrefs.saveBattery(this, stable)
                     com.tejaswi.airpodsbattery.widget.AirPodsWidget.refresh(this)
                     status = "AirPods 3 detected"
                 }
@@ -200,13 +200,13 @@ private fun AirPodsApp(
     if (settings) {
         SettingsScreen(
             activity = activity,
+            packets = packets,
             onBack = { settings = false }
         )
     } else {
         HomeScreen(
             activity = activity,
             battery = battery ?: savedBattery.value,
-            packets = packets,
             status = status,
             scanning = scanning,
             onSettings = { settings = true },
@@ -221,7 +221,6 @@ private fun AirPodsApp(
 private fun HomeScreen(
     activity: MainActivity,
     battery: AirPodsBattery?,
-    packets: List<BluetoothPacket>,
     status: String,
     scanning: Boolean,
     onSettings: () -> Unit,
@@ -313,22 +312,6 @@ private fun HomeScreen(
                 }
             }
 
-            item {
-                Text("Diagnostics", color = AppText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
-
-            items(packets) { packet ->
-                DiagnosticPacket(packet)
-            }
-
-            item {
-                Text(
-                    "Raw BLE diagnostics are kept here so parser changes can be verified without cluttering the main battery view.",
-                    color = AppSecondary,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-            }
         }
     }
 }
@@ -459,8 +442,9 @@ private fun DiagnosticPacket(packet: BluetoothPacket) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScreen(activity: MainActivity, onBack: () -> Unit) {
+private fun SettingsScreen(activity: MainActivity, packets: List<BluetoothPacket>, onBack: () -> Unit) {
     var autoPause by remember { mutableStateOf(AppPrefs.autoPause(activity)) }
+    var autoPlay by remember { mutableStateOf(AppPrefs.autoPlay(activity)) }
     var backgroundMonitoring by remember { mutableStateOf(AppPrefs.backgroundMonitoring(activity)) }
     var showAccessDialog by remember { mutableStateOf(false) }
 
@@ -470,7 +454,7 @@ private fun SettingsScreen(activity: MainActivity, onBack: () -> Unit) {
             onDismissRequest = { showAccessDialog = false },
             title = { Text("Allow media control?") },
             text = {
-                Text("Auto-pause needs Notification Access so the app can find the active media session and send a pause command when an AirPod is removed.")
+                Text("Playback controls need Notification Access so the app can control the active media session when an AirPod is removed or inserted.")
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -523,6 +507,23 @@ private fun SettingsScreen(activity: MainActivity, onBack: () -> Unit) {
             }
 
             item {
+                SettingSwitchRow(
+                    title = "Auto-play when inserted",
+                    subtitle = "Resume media when an AirPod is placed back in your ear.",
+                    checked = autoPlay,
+                    onCheckedChange = { enabled ->
+                        if (enabled && !notificationAccessEnabled(activity)) {
+                            showAccessDialog = true
+                        } else {
+                            autoPlay = enabled
+                            AppPrefs.setAutoPlay(activity, enabled)
+                            if (enabled || autoPause) MonitorController.start(activity) else if (!backgroundMonitoring) MonitorController.stop(activity)
+                        }
+                    }
+                )
+            }
+
+            item {
                 SettingsHeader("BACKGROUND")
                 SettingSwitchRow(
                     title = "Background monitoring",
@@ -531,7 +532,7 @@ private fun SettingsScreen(activity: MainActivity, onBack: () -> Unit) {
                     onCheckedChange = { enabled ->
                         backgroundMonitoring = enabled
                         AppPrefs.setBackgroundMonitoring(activity, enabled)
-                        if (enabled) MonitorController.start(activity) else if (!autoPause) MonitorController.stop(activity)
+                        if (enabled) MonitorController.start(activity) else if (!autoPause && !autoPlay) MonitorController.stop(activity)
                     }
                 )
             }
@@ -548,11 +549,22 @@ private fun SettingsScreen(activity: MainActivity, onBack: () -> Unit) {
             }
 
             item {
+                SettingsHeader("DIAGNOSTICS")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (packets.isEmpty()) {
+                        Text("No BLE packets captured in this session.", color = AppSecondary, fontSize = 12.sp)
+                    } else {
+                        packets.forEach { DiagnosticPacket(it) }
+                    }
+                }
+            }
+
+            item {
                 SettingsHeader("ABOUT")
                 Surface(color = AppSurface, shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(18.dp)) {
                         Text("AirPods Battery", color = AppText, fontWeight = FontWeight.SemiBold)
-                        Text("V4.0.0 • AirPods 3 BLE companion", color = AppSecondary, fontSize = 13.sp)
+                        Text("V5.0.0 • AirPods 3 BLE companion", color = AppSecondary, fontSize = 13.sp)
                         Spacer(Modifier.height(10.dp))
                         Divider(color = AppSurface2)
                         Spacer(Modifier.height(10.dp))
