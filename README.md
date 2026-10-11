@@ -40,7 +40,7 @@ Widget updates are pushed when the app/service receives a fresh AirPods battery 
 ## V5 architecture
 
 ```text
-AirPods BLE advertisements
+AirPods BLE advertisements 
           ↓
      AirPodsParser
           ↓
